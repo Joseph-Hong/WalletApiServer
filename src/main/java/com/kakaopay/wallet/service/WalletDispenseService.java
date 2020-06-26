@@ -29,6 +29,8 @@ import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseUTO;
 /** @formatter:on */
 public interface WalletDispenseService
 {
+	public int dispense(WalletDispenseUTO vo) throws Exception;
+
 	/**
 	 * Create a new record for Receiving Wallet Transaction Information
 	 *

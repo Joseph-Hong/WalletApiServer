@@ -126,6 +126,11 @@
 		 LIMIT 100 OFFSET 0
 		</otherwise>
 	</choose>
+
+	<if test='searchCondition == "FOR_UPDATE"'>
+		   FOR UPDATE
+	</if>
+
 	</select>
 
 	<!--

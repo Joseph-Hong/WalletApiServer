@@ -59,40 +59,40 @@ public class WalletTransferServiceImpl extends EgovAbstractServiceImpl implement
 	@Override
 	public int transfer(WalletTransferCTO vo) throws Exception {
 
-		//
+		// Insert WalletTransfer data
 		if(insertWalletTransfer(vo) > 0) {
-			WalletDispenseCTO dispenseCTO = null;
+			throw new BizException("BZT_TRANSFER_INSERT_501_FAILED", "501", null, 500);
+		}
 
-			Double dispenseAmountTotal = 0.0;
+		// Insert WalletDispense data
+		WalletDispenseCTO dispenseCTO = null;
+		Double dispenseAmountTotal = 0.0;
 
-			for(int i = 0 ; i < vo.getRecipientCount() ; i++) {
-				dispenseCTO = new WalletDispenseCTO();
-				dispenseCTO.setTransferNo(vo.getTransferNo());
-				dispenseCTO.setToken(vo.getToken());
-				dispenseCTO.setRoomId(vo.getRoomId());
-				dispenseCTO.setSenderUserId(vo.getSenderUserId());
+		for(int i = 0 ; i < vo.getRecipientCount() ; i++) {
+			dispenseCTO = new WalletDispenseCTO();
+			dispenseCTO.setTransferNo(vo.getTransferNo());
+			dispenseCTO.setToken(vo.getToken());
+			dispenseCTO.setRoomId(vo.getRoomId());
+			dispenseCTO.setSenderUserId(vo.getSenderUserId());
 
-				double dispenseAmount = 0.0;
-				int remainder = vo.getAmount().intValue() - dispenseAmountTotal.intValue();
+			double dispenseAmount = 0.0;
+			int remainder = vo.getAmount().intValue() - dispenseAmountTotal.intValue();
 
-				if(i == vo.getRecipientCount() -1) {
-					//The last one
-					dispenseAmount = remainder;
-				} else {
-					dispenseAmount = CommonUtil.randomNumeric(1, remainder - (vo.getRecipientCount() - i));
-				}
+			if(i == vo.getRecipientCount() -1) {
+				//The last one
+				dispenseAmount = remainder;
+			} else {
+				dispenseAmount = CommonUtil.randomNumeric(1, remainder - (vo.getRecipientCount() - i));
+			}
 
-				logger.debug(">> before : {}", dispenseAmountTotal);
-				dispenseAmountTotal += dispenseAmount;
-				logger.debug(">> after : {}", dispenseAmountTotal);
+			dispenseAmountTotal += dispenseAmount;
+			dispenseCTO.setAmount(dispenseAmount);
 
-				dispenseCTO.setAmount(dispenseAmount);
-
-				if(walletDispenseService.insertWalletDispense(dispenseCTO) != 1) {
-					throw new BizException("BZT_WALLET_TRANSFER_501_FAILED", "501", null, 500);
-				}
+			if(walletDispenseService.insertWalletDispense(dispenseCTO) != 1) {
+				throw new BizException("BZT_TRANSFER_INSERT_502_FAILED", "501", null, 500);
 			}
 		}
+
 
 		return 1;
 	}

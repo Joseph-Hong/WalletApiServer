@@ -275,6 +275,16 @@
 
 		 WHERE 1=1
 
+		<choose>
+			<when test='searchCondition == "DISTRIBUTION_CONDITION" and @com.cmm.util.CommonUtil@isNotEmpty(searchKeyword)'>
+		   AND recipient_user_id IS NULL
+		   AND transfer_no = #{searchKeyword}
+		   LIMIT 1
+			</when>
+			<otherwise>
 		   AND dispense_no = #{dispenseNo}
+			</otherwise>
+		</choose>
+
 	</update>
 </mapper>
