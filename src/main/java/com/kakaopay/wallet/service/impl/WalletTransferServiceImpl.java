@@ -4,17 +4,23 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.cmm.entity.EgovMap;
+import com.cmm.util.CommonUtil;
 import com.cmm.util.NetUtil;
 import com.kakaopay.wallet.dao.WalletTransferMapper;
+import com.kakaopay.wallet.exception.BizException;
+import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseCTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferCTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferRTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferUTO;
+import com.kakaopay.wallet.service.WalletDispenseService;
 import com.kakaopay.wallet.service.WalletTransferService;
 
 import egovframework.rte.fdl.cmmn.EgovAbstractServiceImpl;
@@ -46,6 +52,51 @@ public class WalletTransferServiceImpl extends EgovAbstractServiceImpl implement
 	@Resource(name="walletTransferMapper")
 	private WalletTransferMapper walletTransferDAO;
 
+	@Resource(name = "walletDispenseService")
+	protected WalletDispenseService walletDispenseService;
+
+	@Transactional (value = TxType.REQUIRED, rollbackOn = Throwable.class)
+	@Override
+	public int transfer(WalletTransferCTO vo) throws Exception {
+
+		//
+		if(insertWalletTransfer(vo) > 0) {
+			WalletDispenseCTO dispenseCTO = null;
+
+			Double dispenseAmountTotal = 0.0;
+
+			for(int i = 0 ; i < vo.getRecipientCount() ; i++) {
+				dispenseCTO = new WalletDispenseCTO();
+				dispenseCTO.setTransferNo(vo.getTransferNo());
+				dispenseCTO.setToken(vo.getToken());
+				dispenseCTO.setRoomId(vo.getRoomId());
+				dispenseCTO.setSenderUserId(vo.getSenderUserId());
+
+				double dispenseAmount = 0.0;
+				int remainder = vo.getAmount().intValue() - dispenseAmountTotal.intValue();
+
+				if(i == vo.getRecipientCount() -1) {
+					//The last one
+					dispenseAmount = remainder;
+				} else {
+					dispenseAmount = CommonUtil.randomNumeric(1, remainder - (vo.getRecipientCount() - i));
+				}
+
+				logger.debug(">> before : {}", dispenseAmountTotal);
+				dispenseAmountTotal += dispenseAmount;
+				logger.debug(">> after : {}", dispenseAmountTotal);
+
+				dispenseCTO.setAmount(dispenseAmount);
+
+				if(walletDispenseService.insertWalletDispense(dispenseCTO) != 1) {
+					throw new BizException("BZT_WALLET_TRANSFER_501_FAILED", "501", null, 500);
+				}
+			}
+		}
+
+		return 1;
+	}
+
 	/**
 	 * Create a new record for WalletTransfer Bulletin
 	 *
@@ -55,7 +106,10 @@ public class WalletTransferServiceImpl extends EgovAbstractServiceImpl implement
 	 */
 	@Override
 	public int insertWalletTransfer(WalletTransferCTO vo) throws Exception {
-		return insertWalletTransfer(new EgovMap(NetUtil.toJson(vo)));
+		EgovMap map = new EgovMap(NetUtil.toJson(vo));
+		int result = insertWalletTransfer(map);
+		vo.setTransferNo(CommonUtil.nvl(map.get("transferNo"), 0));
+		return result;
 	}
 	@Override
 	public int insertWalletTransfer(EgovMap map) throws Exception {

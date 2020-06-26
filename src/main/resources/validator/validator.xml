@@ -37,15 +37,20 @@
 	<formset>
 		<form name="walletTransferCTO">
 			<field property="token" depends="required">
-				<arg0 key="name" />
+				<arg0 key="The token is required." />
 			</field>
 			<field property="token" depends="minlength">
-				<arg0 key="name" />
-				<arg1 key="3" resource="false" />
+				<arg0 key="The token must be at least 3 characters in length." />
 				<var>
 					<var-name>minlength</var-name>
 					<var-value>3</var-value>
 				</var>
+			</field>
+			<field property="amount" depends="required">
+				<arg0 key="The amount is required." />
+			</field>
+			<field property="recipientCount" depends="required">
+				<arg0 key="The recipient_count is required." />
 			</field>
 		</form>
 	</formset>

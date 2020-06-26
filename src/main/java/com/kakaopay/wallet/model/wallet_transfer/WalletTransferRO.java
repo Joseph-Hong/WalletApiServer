@@ -78,8 +78,8 @@ public class WalletTransferRO extends BaseRO implements Serializable {
 		return entity;
 	}
 
-	public static List returnList(List<Map<String, Object>> inputList) {
-		List list = null;
+	public static List<WalletTransferRO> returnList(List<Map<String, Object>> inputList) {
+		List<WalletTransferRO> list = null;
 
 		if (inputList != null) {
 			list = new ArrayList();

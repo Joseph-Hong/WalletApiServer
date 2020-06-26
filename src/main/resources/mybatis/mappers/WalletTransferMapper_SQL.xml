@@ -152,11 +152,7 @@
 		===========		=============	===========================
 		2020.06.26		Joseph.Hong		the first written
 	-->
-	<insert id="insertWalletTransfer" parameterType="egovMap"> <!-- useGeneratedKeys="true" keyProperty="transfer_no" -->
-		<!-- <selectKey keyProperty="transfer_no" resultType="int" order="BEFORE">
-		SELECT IFNULL(MAX(transfer_no), 0) + 1 AS MaxSEQ
-		  FROM wallet_transfer
-		</selectKey> -->
+	<insert id="insertWalletTransfer" parameterType="egovMap" useGeneratedKeys="true" keyProperty="transfer_no">
 		<![CDATA[
 		/* ProgramID=com.kakaopay.wallet.dao.WalletTransferMapper.insertWalletTransfer */
 		INSERT INTO wallet_transfer (

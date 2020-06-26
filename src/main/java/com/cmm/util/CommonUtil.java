@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDateTime;
 import org.slf4j.Logger;
@@ -258,27 +258,9 @@ public class CommonUtil {
 		return uuid;
 	}
 
-	public static String randomNumeric(int count, long start, long end) {
-		String randomNumeric = "";
-
-		while (true) {
-			randomNumeric = RandomStringUtils.randomNumeric(count);
-			long lngRandomNumeric = Long.parseLong(randomNumeric);
-
-			if (start < 0 && end < 0) {
-				break;
-			} else if (end < start) {
-				break;
-			} else if (start <= lngRandomNumeric && lngRandomNumeric <= end) {
-				break;
-			} else if (0 <= start && start <= lngRandomNumeric && end < 0) {
-				break;
-			} else if (0 <= end && lngRandomNumeric <= end && start < 0) {
-				break;
-			}
-		}
-
-		return randomNumeric;
+	public static int randomNumeric(int start, int end) {
+		int boundedRandomValue = ThreadLocalRandom.current().nextInt(start, end);
+		return boundedRandomValue;
 	}
 
 	public static Map getHeaders(HttpServletRequest request) {

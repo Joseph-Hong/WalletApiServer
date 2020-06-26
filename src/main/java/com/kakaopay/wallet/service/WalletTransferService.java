@@ -29,6 +29,8 @@ import com.kakaopay.wallet.model.wallet_transfer.WalletTransferUTO;
 /** @formatter:on */
 public interface WalletTransferService
 {
+	public int transfer(WalletTransferCTO vo) throws Exception;
+
 	/**
 	 * Create a new record for Sending Wallet Transaction Information
 	 *
