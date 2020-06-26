@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kakaopay.wallet.dao.WalletTransferMapper">
+<!--
+	SQL File Name	: WalletTransferMapper.xml
+	Description		: Sending Wallet Transaction Information SQL
+	author			: Joseph.Hong
+	since			: 2020.06.26
+	version			: 1.0
+	Modification Information
+	since			author			description
+	===========		=============	===========================
+	2020.06.26		Joseph.Hong		the first written
+-->
+	<sql id="searchClause">
+		<!-- Search for reg_date -->
+		<if test='@com.cmm.util.CommonUtil@isNotEmpty(searchStartDate) and @com.cmm.util.CommonUtil@isNotEmpty(searchEndDate)'>
+		   AND a.reg_date BETWEEN STR_TO_DATE(#{searchStartDate}, '%m/%d/%Y') AND STR_TO_DATE(CONCAT(#{searchEndDate},' ', '23:59:59'), '%m/%d/%Y %H:%i:%s')
+		</if>
+
+		<!-- Search for any colume with condition and keyword combination -->
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(searchKeyword)">
+			<!--
+			<if test='searchCondition == "all"'>
+			   AND ( a.title LIKE CONCAT('%', RTRIM(LTRIM(#{searchKeyword})), '%')
+					OR a.contents LIKE CONCAT('%', RTRIM(LTRIM(#{searchKeyword})), '%')
+				)
+			</if>
+			-->
+		</if>
+
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(transferNo)">
+		   AND a.transfer_no = #{transferNo}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(token)">
+		   AND a.token = #{token}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(roomId)">
+		   AND a.room_id = #{roomId}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(senderUserId)">
+		   AND a.sender_user_id = #{senderUserId}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(amount)">
+		   AND a.amount = #{amount}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(recipientCount)">
+		   AND a.recipient_count = #{recipientCount}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(regDate)">
+		   AND a.reg_date = #{regDate}
+		</if>
+		<if test="@com.cmm.util.CommonUtil@isNotEmpty(modDate)">
+		   AND a.mod_date = #{modDate}
+		</if>
+	</sql>
+
+	<!--
+		Query Name  : getWalletTransferList
+		Description : Retrieve a selected records list for Sending Wallet Transaction Information
+		since			author			description
+		===========		=============	===========================
+		2020.06.26		Joseph.Hong		the first written
+	-->
+	<select id="getWalletTransferList" parameterType="egovMap" resultType="egovMap">
+		<![CDATA[
+		/* ProgramID=com.kakaopay.wallet.dao.WalletTransferMapper.getWalletTransferList */
+		SELECT a.transfer_no
+
+				, CONVERT(a.token, VARCHAR(3)) AS token
+				, a.room_id
+				, a.sender_user_id
+				, a.amount
+				, a.recipient_count
+				, a.reg_date
+				, a.mod_date
+
+		  FROM wallet_transfer a
+		 WHERE 1=1
+		]]>
+		<include refid="searchClause" />
+
+	<!-- Sort by selected columes or by default -->
+	<choose>
+		<when test='@com.cmm.util.CommonUtil@isEmpty(sortType) or @com.cmm.util.CommonUtil@isEmpty(sortKey)'>
+		 ORDER BY a.transfer_no DESC
+		</when>
+		<otherwise>
+			<trim prefix="ORDER BY" suffix="" prefixOverrides=",">
+
+				<if test='sortKey == "transferNo"'>
+				  , a.transfer_no <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "token"'>
+				  , a.token <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "roomId"'>
+				  , a.room_id <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "senderUserId"'>
+				  , a.sender_user_id <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "amount"'>
+				  , a.amount <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "recipientCount"'>
+				  , a.recipient_count <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "regDate"'>
+				  , a.reg_date <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+				<if test='sortKey == "modDate"'>
+				  , a.mod_date <if test='sortType == "A"'>ASC</if><if test='sortType == "D"'>DESC</if>
+				</if>
+			</trim>
+		</otherwise>
+	</choose>
+
+	<choose>
+		<when test='@com.cmm.util.CommonUtil@isNotEmpty(recordCountPerPage) and recordCountPerPage != -1 and @com.cmm.util.CommonUtil@isNotEmpty(firstIndex)'>
+		 LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+		</when>
+		<when test='@com.cmm.util.CommonUtil@isNotEmpty(recordCountPerPage) and recordCountPerPage == -1'>
+		</when>
+		<otherwise>
+		 LIMIT 100 OFFSET 0
+		</otherwise>
+	</choose>
+	</select>
+
+	<!--
+		Query Name  : getWalletTransferCount
+		Description : Retrieve a selected records count for Sending Wallet Transaction Information
+		since			author			description
+		===========		=============	===========================
+		2020.06.26		Joseph.Hong		the first written
+	-->
+	<select id="getWalletTransferCount" parameterType="egovMap" resultType="int">
+		<![CDATA[
+		/* ProgramID=com.kakaopay.wallet.dao.WalletTransferMapper.getWalletTransferCount */
+		SELECT COUNT(*) AS TOTAL_COUNT
+		  FROM wallet_transfer a
+		 WHERE 1=1
+		]]>
+		<include refid="searchClause" />
+	</select>
+
+	<!--
+		Query Name  : insertWalletTransfer
+		Description : Create a new record for Sending Wallet Transaction Information
+		since			author			description
+		===========		=============	===========================
+		2020.06.26		Joseph.Hong		the first written
+	-->
+	<insert id="insertWalletTransfer" parameterType="egovMap"> <!-- useGeneratedKeys="true" keyProperty="transfer_no" -->
+		<!-- <selectKey keyProperty="transfer_no" resultType="int" order="BEFORE">
+		SELECT IFNULL(MAX(transfer_no), 0) + 1 AS MaxSEQ
+		  FROM wallet_transfer
+		</selectKey> -->
+		<![CDATA[
+		/* ProgramID=com.kakaopay.wallet.dao.WalletTransferMapper.insertWalletTransfer */
+		INSERT INTO wallet_transfer (
+		]]>
+			<trim suffix="" prefixOverrides=",">
+
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(transferNo)">
+				, transfer_no
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(token)">
+				, token
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(roomId)">
+				, room_id
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(senderUserId)">
+				, sender_user_id
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(amount)">
+				, amount
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(recipientCount)">
+				, recipient_count
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(regDate)">
+				, reg_date
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(modDate)">
+				, mod_date
+				</if>
+			</trim>
+		<![CDATA[
+		) VALUES (
+		]]>
+			<trim suffix="" prefixOverrides=",">
+
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(transferNo)">
+				, #{transferNo}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(token)">
+				, #{token}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(roomId)">
+				, #{roomId}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(senderUserId)">
+				, #{senderUserId}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(amount)">
+				, #{amount}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(recipientCount)">
+				, #{recipientCount}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(regDate)">
+				, #{regDate}
+				</if>
+				<if test="@com.cmm.util.CommonUtil@isNotEmpty(modDate)">
+				, #{modDate}
+				</if>
+			</trim>
+		<![CDATA[
+		)
+		]]>
+	</insert>
+
+	<!--
+		Query Name  : updateWalletTransfer
+		Description : Modify a selected record for Sending Wallet Transaction Information
+		since			author			description
+		===========		=============	===========================
+		2020.06.26		Joseph.Hong		the first written
+	-->
+	<update id="updateWalletTransfer" parameterType="egovMap">
+		<![CDATA[
+		/* ProgramID=com.kakaopay.wallet.dao.WalletTransferMapper.updateWalletTransfer */
+		UPDATE wallet_transfer
+		   SET
+		]]>
+		<trim suffix="" prefixOverrides=",">
+
+			<if test="token != null">
+				, token = #{token}
+			</if>
+			<if test="roomId != null">
+				, room_id = #{roomId}
+			</if>
+			<if test="senderUserId != null">
+				, sender_user_id = #{senderUserId}
+			</if>
+			<if test="amount != null">
+				, amount = #{amount}
+			</if>
+			<if test="recipientCount != null">
+				, recipient_count = #{recipientCount}
+			</if>
+			<if test="regDate != null">
+				, reg_date = #{regDate}
+			</if>
+			<if test="modDate != null">
+				, mod_date = #{modDate}
+			</if>
+		</trim>
+
+		 WHERE 1=1
+
+		   AND transfer_no = #{transferNo}
+	</update>
+
+</mapper>
