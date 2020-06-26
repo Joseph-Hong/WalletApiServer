@@ -1,0 +1,1 @@
+java -jar WalletApiServer-0.0.1-SNAPSHOT.jar EmAlert --spring.config.location=application-prd.properties

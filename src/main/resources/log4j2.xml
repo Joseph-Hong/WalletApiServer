@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="DEBUG">
+	<Appenders>
+		<Console name="console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{HH:mm:ss} %-5.5p [%C:%4L] %-16M - %m%n" />
+		</Console>
+		<RollingFile name="RollingFile" filename="/kakaopay/logs/WalletApiServer.log" filepattern="/kakaopay/logs/WalletApiServer.%d{yyyyMMdd}.log">
+			<PatternLayout pattern="%d{HH:mm:ss} %-5.5p [%26.20C{1}:%4L] - %m%n" />
+			<Policies>
+				<!-- <SizeBasedTriggeringPolicy size="10" /> -->
+				<TimeBasedTriggeringPolicy modulate="true" />
+			</Policies>
+			<DefaultRolloverStrategy max="20" fileIndex="min" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<!-- Disabled logging -->
+
+		<!-- <Logger name="com.zaxxer.hikari.HikariConfig" level="DEBUG" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger> -->
+
+		<Logger name="org.mybatis" level="OFF" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<Logger name="org.springframework.jdbc.datasource" level="OFF" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<Logger name="org.springframework.web.servlet" level="OFF" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<Logger name="com.zaxxer.hikari" level="OFF" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<!-- Activated logging -->
+
+		<Logger name="com" level="DEBUG" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<Logger name="com.kakaopay.wallet" level="DEBUG" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<logger name="org.apache.http.impl.conn.PoolingHttpClientConnectionManager" level="WARN" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</logger>
+
+		<Logger name="org.apache.http" level="DEBUG" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<Logger name="org.apache.http.wire" level="DEBUG" additivity="false">
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Logger>
+
+		<Root level="DEBUG">
+			<!-- ALL, TRACE, DEBUG, INFO, WARN, ERROR, FATAL, OFF -->
+			<AppenderRef ref="console" />
+			<AppenderRef ref="RollingFile" />
+		</Root>
+	</Loggers>
+</Configuration>

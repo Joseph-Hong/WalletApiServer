@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE form-validation PUBLIC
+	"-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.1//EN"
+	"http://jakarta.apache.org/commons/dtds/validator_1_1.dtd">
+
+<form-validation>
+	<!--
+	Validator 속성
+	depends 속성	체크				키					에러 메세지
+	required		필수 체크			errors.required		{0}입고 안되어 입력해 주세요
+	minlength		최소장 체크			errors.minlength	{0}은{1}캐릭터 이상으로 입력해 주세요
+	maxlength		최대장 체크			errors.maxlength	{0}은{1}캐릭터 이내에서 입력해 주세요
+	mask			정규 표현 체크		errors.invalid		{0}은 올바른 형식에서 입력해 주세요
+	byte			Byte형 체크			errors.byte			{0}은 byte형으로 입력해 주세요
+	short			Short형 체크		errors.short		{0}은 short형으로 입력해 주세요
+	integer			Integer형 체크		errors.integer		{0}은 int형으로 입력해 주세요
+	long			Long형 체크			errors.long			{0}은 Long형으로 입력해 주세요
+	float			Float형 체크		errors.float		{0}은 Float형으로 입력해 주세요
+	double			Double형 체크		errors.double		{0}은 Double형으로 입력해 주세요
+	date			일자형 체크			errors.date			{0}은 일자형으로 입력해 주세요
+	range			범위 체크			errors.range		{0}은{1}이상{2}이하의 범위에서 입력해 주세요
+	intRange		범위 체크(정수)		errors.range		{0}은{1}이상{2}이하의 범위에서 입력해 주세요
+	floatRange		범위 체크(소수)		errors.range		{0}은{1}이상{2}이하의 범위에서 입력해 주세요
+	email			E-Mail 포맷 체크	errors.email		{0}은 올바른 형식에서 입력해 주세요
+	 -->
+	<!--
+	depends속성에 따른 파라미터
+	depends 속성		필요한 파라미터
+	minlength		minLength
+	maxlength		maxLength
+	mask			mask
+	range			max, min
+	intRange		max, min
+	floatRange		max, min
+	date			datePattern(datePatternStrict)
+	 -->
+	<formset>
+		<form name="walletTransferCTO">
+			<field property="token" depends="required">
+				<arg0 key="name" />
+			</field>
+			<field property="token" depends="minlength">
+				<arg0 key="name" />
+				<arg1 key="3" resource="false" />
+				<var>
+					<var-name>minlength</var-name>
+					<var-value>3</var-value>
+				</var>
+			</field>
+		</form>
+	</formset>
+
+</form-validation>
