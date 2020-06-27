@@ -66,6 +66,19 @@
 				</var>
 			</field>
 		</form>
+
+		<form name="walletTransferRTO">
+			<field property="token" depends="required">
+				<arg0 key="The token is required." />
+			</field>
+			<field property="token" depends="minlength">
+				<arg0 key="The token must be at least 3 characters in length." />
+				<var>
+					<var-name>minlength</var-name>
+					<var-value>3</var-value>
+				</var>
+			</field>
+		</form>
 	</formset>
 
 </form-validation>

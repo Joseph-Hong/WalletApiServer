@@ -20,13 +20,6 @@
 
 		<!-- Search for any colume with condition and keyword combination -->
 		<if test="@com.cmm.util.CommonUtil@isNotEmpty(searchKeyword)">
-			<!--
-			<if test='searchCondition == "all"'>
-			   AND ( a.title LIKE CONCAT('%', RTRIM(LTRIM(#{searchKeyword})), '%')
-					OR a.contents LIKE CONCAT('%', RTRIM(LTRIM(#{searchKeyword})), '%')
-				)
-			</if>
-			-->
 		</if>
 
 		<if test="@com.cmm.util.CommonUtil@isNotEmpty(transferNo)">

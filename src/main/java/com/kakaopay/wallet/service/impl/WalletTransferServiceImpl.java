@@ -7,6 +7,8 @@ import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 
+import org.joda.time.LocalDateTime;
+import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,9 @@ import com.cmm.util.NetUtil;
 import com.kakaopay.wallet.dao.WalletTransferMapper;
 import com.kakaopay.wallet.exception.BizException;
 import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseCTO;
+import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseRTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferCTO;
+import com.kakaopay.wallet.model.wallet_transfer.WalletTransferRO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferRTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferUTO;
 import com.kakaopay.wallet.service.WalletDispenseService;
@@ -55,16 +59,76 @@ public class WalletTransferServiceImpl extends EgovAbstractServiceImpl implement
 	@Resource(name = "walletDispenseService")
 	protected WalletDispenseService walletDispenseService;
 
+	@Override
+	public void check(WalletTransferRTO vo) throws Exception {
+
+		//[Step-10] Retrieve WalletTransfer data
+		WalletTransferRTO walletTransferRTO = new WalletTransferRTO();
+		walletTransferRTO.setRoomId(vo.getRoomId());
+		walletTransferRTO.setSenderUserId(vo.getSenderUserId());
+		walletTransferRTO.setToken(vo.getToken());
+		walletTransferRTO.setRecordCountPerPage(-1);
+
+		List<Map<String, Object>> walletTransferList = getWalletTransferList(walletTransferRTO);
+
+		//[Step-20] Validate the input parameter
+		//210) 뿌린 사람 자신만 조회를 할 수 있습니다. 다른사람의 뿌리기건이나 유효하지 않은 token에 대해서는 조회 실패 응답이 내려가야 합니다.
+		if(CommonUtil.isEmpty(walletTransferList)) {
+			throw new BizException("BZT_CHECK_NOT_FOUND_501_FAILED", "501", null, 500);
+		}
+
+		Map<String, Object> walletTransfer = walletTransferList.get(0);
+
+		//211) 뿌린 건에 대한 조회는 7일 동안 할 수 있습니다.
+		LocalDateTime nowDT = LocalDateTime.now();
+		String then = CommonUtil.nvl(walletTransfer.get("regDate")).replaceAll(" ", "T");
+		LocalDateTime thenDT = new LocalDateTime().parse(then);
+		int diffSeconds = Seconds.secondsBetween(thenDT, nowDT).getSeconds();
+
+		if(diffSeconds > (60 * 60 * 24 * 7)) {
+			throw new BizException("BZT_CHECK_TIME_OVER_506_FAILED", "506", null, 500);
+		}
+
+		//[Step-30] Retrieve WalletTransfer, list of WalletDispense data
+		//token에 해당하는 뿌리기 건의 현재 상태를 응답값으로 내려줍니다. 현재상태는 다음의 정보를 포함합니다.
+		//뿌린 시각, 뿌린 금액, 받기 완료된 금액, 받기 완료된 정보 ([받은 금액, 받은 사용자 아이디] 리스트)
+		WalletDispenseRTO walletDispenseVO = new WalletDispenseRTO();
+		walletDispenseVO.setTransferNo(CommonUtil.nvl(walletTransfer.get("transferNo"), 0));
+		walletDispenseVO.setSenderUserId(vo.getSenderUserId());
+		walletDispenseVO.setSearchCondition("NOT_NULL");
+		walletDispenseVO.setSearchKeyword("RECIPIENT_USER_ID");
+		walletDispenseVO.setPageSize(-1);
+
+		List<Map<String, Object>> walletDispenseList = walletDispenseService.getWalletDispenseList(walletDispenseVO);
+
+		if(CommonUtil.isEmpty(walletDispenseList)) {
+			throw new BizException("BZT_CHECK_NOT_FOUND_RESPONSE_502_FAILED", "502", null, 500);
+		}
+
+		vo.setWalletDispenses(walletDispenseList);
+
+		WalletTransferRO walletTransferRO = new WalletTransferRO(walletTransfer);
+		vo.setRegDate(walletTransferRO.getRegDate());
+		vo.setAmount(walletTransferRO.getAmount());
+
+		double dispenseTotalAmount = 0.0;
+
+		for(Map<String, Object> walletDispense : walletDispenseList) {
+			dispenseTotalAmount += CommonUtil.nvl(walletDispense.get("amount"), 0.0);
+		}
+		vo.setOutput(CommonUtil.nvl(dispenseTotalAmount));
+	}
+
 	@Transactional (value = TxType.REQUIRED, rollbackOn = Throwable.class)
 	@Override
-	public int transfer(WalletTransferCTO vo) throws Exception {
+	public void transfer(WalletTransferCTO vo) throws Exception {
 
-		// Insert WalletTransfer data
+		//[Step-10] Insert WalletTransfer data
 		if(insertWalletTransfer(vo) != 1) {
 			throw new BizException("BZT_TRANSFER_INSERT_501_FAILED", "501", null, 500);
 		}
 
-		// Insert WalletDispense data
+		//[Step-20] Insert WalletDispense data
 		WalletDispenseCTO dispenseCTO = null;
 		Double dispenseAmountTotal = 0.0;
 
@@ -92,9 +156,6 @@ public class WalletTransferServiceImpl extends EgovAbstractServiceImpl implement
 				throw new BizException("BZT_TRANSFER_INSERT_502_FAILED", "501", null, 500);
 			}
 		}
-
-
-		return 1;
 	}
 
 	/**

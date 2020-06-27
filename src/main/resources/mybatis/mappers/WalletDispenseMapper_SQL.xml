@@ -20,13 +20,11 @@
 
 		<!-- Search for any colume with condition and keyword combination -->
 		<if test="@com.cmm.util.CommonUtil@isNotEmpty(searchKeyword)">
-			<!--
-			<if test='searchCondition == "all"'>
-			   AND ( a.title LIKE CONCAT('%', RTRIM(LTRIM(#{searchKeyword})), '%')
-					OR a.contents LIKE CONCAT('%', RTRIM(LTRIM(#{searchKeyword})), '%')
-				)
+			<if test='searchCondition == "NOT_NULL"'>
+				<if test='searchKeyword == "RECIPIENT_USER_ID"'>
+					AND a.recipient_user_id IS NOT NULL
+				</if>
 			</if>
-			-->
 		</if>
 
 		<if test="@com.cmm.util.CommonUtil@isNotEmpty(dispenseNo)">
@@ -71,7 +69,7 @@
 		SELECT a.dispense_no
 
 				, a.transfer_no
-				, a.token
+				, CONVERT(a.token, VARCHAR(3)) AS token
 				, a.room_id
 				, a.sender_user_id
 				, a.amount

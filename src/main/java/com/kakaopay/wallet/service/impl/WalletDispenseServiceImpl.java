@@ -59,9 +59,9 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 
 	@Transactional (value = TxType.REQUIRED, rollbackOn = Throwable.class)
 	@Override
-	public int dispense(WalletDispenseUTO vo) throws Exception {
+	public void dispense(WalletDispenseUTO vo) throws Exception {
 
-		//[Step-10] Select WalletTransfer data by transaction lock
+		//[Step-10] Retrieve WalletTransfer data by transaction lock
 		WalletTransferRTO walletTransferRTO = new WalletTransferRTO();
 		walletTransferRTO.setRoomId(vo.getRoomId());
 		walletTransferRTO.setToken(vo.getToken());
@@ -71,7 +71,6 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 		List<Map<String, Object>> walletTransferList = walletTransferService.getWalletTransferList(walletTransferRTO);
 
 		//[Step-20] Validate the input parameter
-
 		//210) 뿌리기가 호출된 대화방과 동일한 대화방에 속한 사용자만이 받을 수 있습니다
 		if(CommonUtil.isEmpty(walletTransferList)) {
 			throw new BizException("BZT_DISPENSE_NOT_FOUND_501_FAILED", "501", null, 500);
@@ -81,12 +80,8 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 
 		//211) 뿌린 건은 10분간만 유효합니다. 뿌린지 10분이 지난 요청에 대해서는 받기 실패 응답이 내려가야 합니다.
 		LocalDateTime nowDT = LocalDateTime.now();
-		String now = nowDT.toString("yyyy-MM-dd HH:mm:ss");
-
 		String then = CommonUtil.nvl(walletTransfer.get("regDate")).replaceAll(" ", "T");
-		LocalDateTime thenDT = new LocalDateTime();
-		thenDT = thenDT.parse(then);
-
+		LocalDateTime thenDT = new LocalDateTime().parse(then);
 		int diffSeconds = Seconds.secondsBetween(thenDT, nowDT).getSeconds();
 
 		if(diffSeconds > (60 * 10)) {
@@ -133,8 +128,6 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 		//[Step-90] Return the amount
 		Map<String, Object> walletDispense =  walletDispenseList.get(0);
 		vo.setAmount(CommonUtil.nvl(walletDispense.get("amount"), 0.0));
-
-		return 1;
 	}
 
 	/**

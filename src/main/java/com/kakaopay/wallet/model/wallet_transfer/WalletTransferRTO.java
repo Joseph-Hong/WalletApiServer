@@ -2,8 +2,12 @@ package com.kakaopay.wallet.model.wallet_transfer;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import com.cmm.entity.SearchVO;
+import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseRO;
+import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseRTO;
 
 /** @formatter:off */
 /**
@@ -169,6 +173,15 @@ public class WalletTransferRTO extends SearchVO implements Serializable {
 		 */
 		public void setModDate(Date modDate)  {
 			this.modDate = modDate;
+		}
+
+	private List<WalletDispenseRO> walletDispenses;
+
+		public List<WalletDispenseRO> getWalletDispenses() {
+			return walletDispenses;
+		}
+		public void setWalletDispenses(List<Map<String, Object>> walletDispenseList) {
+			this.walletDispenses = WalletDispenseRO.returnList(walletDispenseList);
 		}
 
 	/*

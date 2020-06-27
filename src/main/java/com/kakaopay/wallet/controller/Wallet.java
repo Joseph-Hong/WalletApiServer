@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +21,7 @@ import com.cmm.entity.ResultVO;
 import com.cmm.util.CommonUtil;
 import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseUTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferCTO;
+import com.kakaopay.wallet.model.wallet_transfer.WalletTransferRTO;
 import com.kakaopay.wallet.service.WalletDispenseService;
 import com.kakaopay.wallet.service.WalletTransferService;
 
@@ -87,13 +89,7 @@ public class Wallet extends BaseController {
 		}
 
 		// Insert WalletTransfer and WalletDispense data
-		if (walletTransferService.transfer(walletTransferVO) < 1) {
-			resultVO.setCode(501)
-					.setMessage("BZT_TRANSFER_501_FAILED")
-					.toModel(model);
-
-			return "jsonView";
-		}
+		walletTransferService.transfer(walletTransferVO);
 
 		// Return the result model
 		resultVO.setCode(200)
@@ -135,13 +131,7 @@ public class Wallet extends BaseController {
 		}
 
 		// Update WalletDispense data
-		if (walletDispenseService.dispense(walletDispenseVO) < 1) {
-			resultVO.setCode(501)
-			.setMessage("BZT_DISPENSE_501_FAILED")
-			.toModel(model);
-
-			return "jsonView";
-		}
+		walletDispenseService.dispense(walletDispenseVO);
 
 		// Return the result model
 		resultVO.setCode(200)
@@ -154,6 +144,52 @@ public class Wallet extends BaseController {
 		return "jsonView";
 	}
 
+	/**
+	 * 조회 API
+	 */
+	@RequestMapping(value = { "/v1/check" },
+			method = { RequestMethod.GET },
+	        produces={ MediaType.APPLICATION_JSON_VALUE }
+	)
+	public String check(@ModelAttribute("walletTransferRTO") WalletTransferRTO walletTransferVO, @RequestHeader(value="X-USER-ID", required=true) Integer userId
+			, @RequestHeader(value="X-ROOM-ID", required=true) String roomId, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws Exception
+	{
+		ResultVO resultVO = new ResultVO();
+
+		walletTransferVO.setSenderUserId(userId);
+		walletTransferVO.setRoomId(roomId);
+
+		// Check the input validation for entity
+		beanValidator.validate(walletTransferVO, bindingResult);
+
+		if (bindingResult.hasErrors()) {
+			resultVO.setCode(400)
+			.setMessage("BZT_CHECK_400_FAILED")
+			.setData(getErrorMessage(bindingResult))
+			.toModel(model);
+
+			return "jsonView";
+		}
+
+		// Retrieve WalletTransfer data
+		walletTransferService.check(walletTransferVO);
+
+		//뿌린 시각, 뿌린 금액, 받기 완료된 금액, 받기 완료된 정보 ([받은 금액, 받은 사용자 아이디] 리스트)
 
 
+		// Return the result model
+		resultVO.setCode(200)
+		.setMessage("BZT_CHECK_200_SUCCESS")
+		.setData(CommonUtil.map()
+							.add("transfer_dt", walletTransferVO.getRegDate())
+							.add("transfer_amount", walletTransferVO.getAmount())
+							.add("dispense_total_amount", CommonUtil.nvl(walletTransferVO.getOutput(), 0.0))
+							.add("dispenses", walletTransferVO.getWalletDispenses())
+							.build())
+		.toModel(model);
+
+		model.addAttribute("walletTransferRTO", null);
+
+		return "jsonView";
+	}
 }
