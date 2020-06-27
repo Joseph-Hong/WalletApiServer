@@ -63,6 +63,7 @@ public class Wallet extends BaseController {
 	/**
 	 * 뿌리기 API
 	 */
+	/** @formatter:off */
 	@RequestMapping(value = { "/v1/transfer" },
 			method = { RequestMethod.POST },
 	        consumes={ MediaType.APPLICATION_JSON_VALUE },
@@ -70,6 +71,7 @@ public class Wallet extends BaseController {
 	)
 	public String transfer(@RequestBody WalletTransferCTO walletTransferVO, @RequestHeader(value="X-USER-ID", required=true) Integer userId
 			, @RequestHeader(value="X-ROOM-ID", required=true) String roomId, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws Exception
+	/** @formatter:on */
 	{
 		ResultVO resultVO = new ResultVO();
 
@@ -80,10 +82,12 @@ public class Wallet extends BaseController {
 		beanValidator.validate(walletTransferVO, bindingResult);
 
 		if (bindingResult.hasErrors()) {
+			/** @formatter:off */
 			resultVO.setCode(400)
 					.setMessage("BZT_TRANSFER_400_FAILED")
 					.setData(getErrorMessage(bindingResult))
 					.toModel(model);
+			/** @formatter:on */
 
 			return "jsonView";
 		}
@@ -92,12 +96,14 @@ public class Wallet extends BaseController {
 		walletTransferService.transfer(walletTransferVO);
 
 		// Return the result model
+		/** @formatter:off */
 		resultVO.setCode(200)
 				.setMessage("BZT_TRANSFER_200_SUCCESS")
 				.setData(CommonUtil.map()
 									.add("token", walletTransferVO.getToken())
 									.build())
 				.toModel(model);
+		/** @formatter:on */
 
 		return "jsonView";
 	}
@@ -105,6 +111,7 @@ public class Wallet extends BaseController {
 	/**
 	 * 받기 API
 	 */
+	/** @formatter:off */
 	@RequestMapping(value = { "/v1/dispense" },
 			method = { RequestMethod.PUT },
 	        consumes={ MediaType.APPLICATION_JSON_VALUE },
@@ -112,6 +119,7 @@ public class Wallet extends BaseController {
 	)
 	public String dispense(@RequestBody WalletDispenseUTO walletDispenseVO, @RequestHeader(value="X-USER-ID", required=true) Integer userId
 			, @RequestHeader(value="X-ROOM-ID", required=true) String roomId, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws Exception
+	/** @formatter:on */
 	{
 		ResultVO resultVO = new ResultVO();
 
@@ -122,10 +130,12 @@ public class Wallet extends BaseController {
 		beanValidator.validate(walletDispenseVO, bindingResult);
 
 		if (bindingResult.hasErrors()) {
+			/** @formatter:off */
 			resultVO.setCode(400)
-			.setMessage("BZT_DISPENSE_400_FAILED")
-			.setData(getErrorMessage(bindingResult))
-			.toModel(model);
+					.setMessage("BZT_DISPENSE_400_FAILED")
+					.setData(getErrorMessage(bindingResult))
+					.toModel(model);
+			/** @formatter:on */
 
 			return "jsonView";
 		}
@@ -134,12 +144,14 @@ public class Wallet extends BaseController {
 		walletDispenseService.dispense(walletDispenseVO);
 
 		// Return the result model
+		/** @formatter:off */
 		resultVO.setCode(200)
-		.setMessage("BZT_DISPENSE_200_SUCCESS")
-		.setData(CommonUtil.map()
-							.add("amount", walletDispenseVO.getAmount())
-							.build())
-		.toModel(model);
+				.setMessage("BZT_DISPENSE_200_SUCCESS")
+				.setData(CommonUtil.map()
+									.add("amount", walletDispenseVO.getAmount())
+									.build())
+				.toModel(model);
+		/** @formatter:on */
 
 		return "jsonView";
 	}
@@ -147,12 +159,14 @@ public class Wallet extends BaseController {
 	/**
 	 * 조회 API
 	 */
+	/** @formatter:off */
 	@RequestMapping(value = { "/v1/check" },
 			method = { RequestMethod.GET },
 	        produces={ MediaType.APPLICATION_JSON_VALUE }
 	)
 	public String check(@ModelAttribute("walletTransferRTO") WalletTransferRTO walletTransferVO, @RequestHeader(value="X-USER-ID", required=true) Integer userId
 			, @RequestHeader(value="X-ROOM-ID", required=true) String roomId, BindingResult bindingResult, Model model, HttpServletRequest request, HttpServletResponse response) throws Exception
+	/** @formatter:on */
 	{
 		ResultVO resultVO = new ResultVO();
 
@@ -163,10 +177,12 @@ public class Wallet extends BaseController {
 		beanValidator.validate(walletTransferVO, bindingResult);
 
 		if (bindingResult.hasErrors()) {
+			/** @formatter:off */
 			resultVO.setCode(400)
-			.setMessage("BZT_CHECK_400_FAILED")
-			.setData(getErrorMessage(bindingResult))
-			.toModel(model);
+					.setMessage("BZT_CHECK_400_FAILED")
+					.setData(getErrorMessage(bindingResult))
+					.toModel(model);
+			/** @formatter:on */
 
 			return "jsonView";
 		}
@@ -174,19 +190,18 @@ public class Wallet extends BaseController {
 		// Retrieve WalletTransfer data
 		walletTransferService.check(walletTransferVO);
 
-		//뿌린 시각, 뿌린 금액, 받기 완료된 금액, 받기 완료된 정보 ([받은 금액, 받은 사용자 아이디] 리스트)
-
-
 		// Return the result model
+		/** @formatter:off */
 		resultVO.setCode(200)
-		.setMessage("BZT_CHECK_200_SUCCESS")
-		.setData(CommonUtil.map()
-							.add("transfer_dt", walletTransferVO.getRegDate())
-							.add("transfer_amount", walletTransferVO.getAmount())
-							.add("dispense_total_amount", CommonUtil.nvl(walletTransferVO.getOutput(), 0.0))
-							.add("dispenses", walletTransferVO.getWalletDispenses())
-							.build())
-		.toModel(model);
+				.setMessage("BZT_CHECK_200_SUCCESS")
+				.setData(CommonUtil.map()
+									.add("transfer_dt", walletTransferVO.getRegDate()) //뿌린 시각
+									.add("transfer_amount", walletTransferVO.getAmount()) //뿌린 금액
+									.add("dispense_total_amount", CommonUtil.nvl(walletTransferVO.getOutput(), 0.0)) //받기 완료된 금액
+									.add("dispenses", walletTransferVO.getWalletDispenses()) //받기 완료된 정보 ([받은 금액, 받은 사용자 아이디] 리스트)
+									.build())
+				.toModel(model);
+		/** @formatter:on */
 
 		model.addAttribute("walletTransferRTO", null);
 

@@ -26,6 +26,7 @@ import org.springframework.util.StopWatch;
 import com.cmm.util.CommonUtil;
 import com.kakaopay.wallet.model.wallet_dispense.WalletDispenseUTO;
 import com.kakaopay.wallet.model.wallet_transfer.WalletTransferCTO;
+import com.kakaopay.wallet.model.wallet_transfer.WalletTransferRTO;
 
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
@@ -95,6 +96,7 @@ public class WalletTests {
 		logger.debug("End of transfer : {} --------------------------------------", sw.getTotalTimeSeconds());
 	}
 
+	@Disabled("Pending")
 	@Test
 	void concurrencyDistributeForBlockingDupUserId() throws Exception {
 
@@ -134,7 +136,6 @@ public class WalletTests {
 		logger.debug("End of concurrencyDistributeForBlockingDupUserId : {} --------------------------------------", sw.getTotalTimeSeconds());
 	}
 
-	@Disabled("Pending")
 	@Test
 	void distribute() throws Exception {
 
@@ -144,18 +145,16 @@ public class WalletTests {
 
 		int uniqueNo = c.getAndIncrement() + 1;
 
-		int userId = CommonUtil.randomNumeric(0, 10); //받기 테스터 10명
+		int userId = 0; //뿌린 사람
 		String roomId = "a001"; //대화방
-
-		WalletDispenseUTO walletDispenseUTO = new WalletDispenseUTO();
-		walletDispenseUTO.setToken(UUID.randomUUID().toString().substring(0, 3));
+		String token = "1c9";
 
 		/** @formatter:off */
-		mockMvc.perform(MockMvcRequestBuilders.put("/wallet/v1/dispense")
+		mockMvc.perform(MockMvcRequestBuilders.get("/wallet/v1/check")
 													.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
 													.header("X-USER-ID", userId)
 													.header("X-ROOM-ID", roomId)
-													.content(walletDispenseUTO.serialize())
+													.param("token", token)
 							)
 					.andDo(MockMvcResultHandlers.print())
 					.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
