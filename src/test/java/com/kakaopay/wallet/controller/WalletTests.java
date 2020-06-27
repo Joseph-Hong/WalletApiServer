@@ -51,7 +51,6 @@ public class WalletTests {
 		blitzer.shutdown();
 	}
 
-	@Disabled("Pending")
 	@Test
 	void transfer() throws Exception {
 
@@ -96,7 +95,6 @@ public class WalletTests {
 		logger.debug("End of transfer : {} --------------------------------------", sw.getTotalTimeSeconds());
 	}
 
-	@Disabled("Pending")
 	@Test
 	void concurrencyDistributeForBlockingDupUserId() throws Exception {
 
