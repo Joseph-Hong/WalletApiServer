@@ -38,7 +38,7 @@ public class WalletTests {
 	protected MockMvc mockMvc;
 
 	static AtomicInteger c;
-	static Blitzer blitzer = new Blitzer(999, 10);
+	static Blitzer blitzer = new Blitzer(99, 10);
 
 	@BeforeAll
 	static void setup() {
@@ -46,11 +46,11 @@ public class WalletTests {
 	}
 
 	@AfterAll
-    static void tearDown() throws InterruptedException {
-        blitzer.shutdown();
+	static void tearDown() throws InterruptedException {
+		blitzer.shutdown();
 	}
 
-	@Disabled("Pending")
+
 	@Test
 	void transfer() throws Exception {
 
@@ -59,71 +59,80 @@ public class WalletTests {
 		sw.start();
 
 		blitzer.blitz(new Runnable() {
-            public void run() {
-                int uniqueNo = c.getAndIncrement() + 1;
+			public void run() {
+				int uniqueNo = c.getAndIncrement() + 1;
 
-                int userId = CommonUtil.randomNumeric(0, 10); //뿌리기 테스터 10명
-        		String roomId = "a001"; //대화방
+				int userId = CommonUtil.randomNumeric(0, 10); //뿌리기 테스터 10명
+				String roomId = "a001"; //대화방
+				String token = UUID.randomUUID().toString().substring(0, 3);
+				logger.debug("## hashCode : {}", token.hashCode());
 
-        		WalletTransferCTO walletTransferCTO = new WalletTransferCTO();
-        		//walletTransferCTO.setToken(String.format("a%02d", uniqueNo));
-        		walletTransferCTO.setToken(UUID.randomUUID().toString().substring(0, 3));
-        		walletTransferCTO.setAmount(100000.0);
-        		walletTransferCTO.setRecipientCount(20); //20명에게
+				WalletTransferCTO walletTransferCTO = new WalletTransferCTO();
+				walletTransferCTO.setToken(token);
+				walletTransferCTO.setAmount(100000.0);
+				walletTransferCTO.setRecipientCount(20); //20명에게
 
 				try {
-	        		/** @formatter:off */
-	        		mockMvc.perform(MockMvcRequestBuilders.post("/wallet/v1/transfer")
-	        												.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-	        												.header("X-USER-ID", userId)
-	        												.header("X-ROOM-ID", roomId)
-	        												.content(walletTransferCTO.serialize())
-	        						)
-	        					.andDo(MockMvcResultHandlers.print())
-	        					.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
-	        					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE));
-	        		/** @formatter:on */
+					/** @formatter:off */
+					mockMvc.perform(MockMvcRequestBuilders.post("/wallet/v1/transfer")
+															.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+															.header("X-USER-ID", userId)
+															.header("X-ROOM-ID", roomId)
+															.content(walletTransferCTO.serialize())
+									)
+								.andDo(MockMvcResultHandlers.print())
+								.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+								.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE));
+					/** @formatter:on */
 
-				} catch(Exception e) {
+				} catch (Exception e) {
 					logger.error("{}", e.fillInStackTrace());
 				}
-            }
+			}
 		});
 
 		sw.stop();
 		logger.debug("End of transfer : {} --------------------------------------", sw.getTotalTimeSeconds());
 	}
 
+	@Disabled("Pending")
 	@Test
-	void distributeBlockingInDupUserId() throws Exception {
+	void concurrencyDistributeForBlockingDupUserId() throws Exception {
 
-		logger.debug("Start of distributeBlockingInDupUserId ++++++++++++++++++++++++++++++++++++++");
+		logger.debug("Start of concurrencyDistributeForBlockingDupUserId ++++++++++++++++++++++++++++++++++++++");
 		StopWatch sw = new StopWatch();
 		sw.start();
 
-        int uniqueNo = c.getAndIncrement() + 1;
+		blitzer.blitz(new Runnable() {
+			public void run() {
 
-        int userId = 2; //받기 - 동일한 유저
-		String roomId = "a001"; //대화방
+				int userId = 3; //받기 - 동일한 유저
+				String roomId = "a001"; //대화방
 
-		WalletDispenseUTO walletDispenseUTO = new WalletDispenseUTO();
-		walletDispenseUTO.setToken("1c9");
+				WalletDispenseUTO walletDispenseUTO = new WalletDispenseUTO();
+				walletDispenseUTO.setToken("1c9");
 
-		/** @formatter:off */
-		this.mockMvc.perform(MockMvcRequestBuilders.put("/wallet/v1/dispense")
-													.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-													.header("X-USER-ID", userId)
-													.header("X-ROOM-ID", roomId)
-													.content(walletDispenseUTO.serialize())
-							)
-					.andDo(MockMvcResultHandlers.print())
-					.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
-					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE));
-		/** @formatter:on */
+				try {
+					/** @formatter:off */
+					mockMvc.perform(MockMvcRequestBuilders.put("/wallet/v1/dispense")
+																.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+																.header("X-USER-ID", userId)
+																.header("X-ROOM-ID", roomId)
+																.content(walletDispenseUTO.serialize())
+										)
+								.andDo(MockMvcResultHandlers.print())
+								.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
+								.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE));
+					/** @formatter:on */
 
+				} catch (Exception e) {
+					logger.error("{}", e.fillInStackTrace());
+				}
+			}
+		});
 
 		sw.stop();
-		logger.debug("End of distributeBlockingInDupUserId : {} --------------------------------------", sw.getTotalTimeSeconds());
+		logger.debug("End of concurrencyDistributeForBlockingDupUserId : {} --------------------------------------", sw.getTotalTimeSeconds());
 	}
 
 	@Disabled("Pending")
@@ -134,17 +143,16 @@ public class WalletTests {
 		StopWatch sw = new StopWatch();
 		sw.start();
 
+		int uniqueNo = c.getAndIncrement() + 1;
 
-        int uniqueNo = c.getAndIncrement() + 1;
-
-        int userId = CommonUtil.randomNumeric(0, 10); //받기 테스터 10명
+		int userId = CommonUtil.randomNumeric(0, 10); //받기 테스터 10명
 		String roomId = "a001"; //대화방
 
 		WalletDispenseUTO walletDispenseUTO = new WalletDispenseUTO();
 		walletDispenseUTO.setToken(UUID.randomUUID().toString().substring(0, 3));
 
 		/** @formatter:off */
-		this.mockMvc.perform(MockMvcRequestBuilders.put("/wallet/v1/dispense")
+		mockMvc.perform(MockMvcRequestBuilders.put("/wallet/v1/dispense")
 													.header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
 													.header("X-USER-ID", userId)
 													.header("X-ROOM-ID", roomId)
@@ -154,7 +162,6 @@ public class WalletTests {
 					.andExpect(MockMvcResultMatchers.status().is(HttpStatus.OK.value()))
 					.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON_VALUE));
 		/** @formatter:on */
-
 
 		sw.stop();
 		logger.debug("End of distribute : {} --------------------------------------", sw.getTotalTimeSeconds());
