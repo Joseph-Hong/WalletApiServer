@@ -60,7 +60,7 @@ public class WalletTransferServiceImpl extends EgovAbstractServiceImpl implement
 	public int transfer(WalletTransferCTO vo) throws Exception {
 
 		// Insert WalletTransfer data
-		if(insertWalletTransfer(vo) > 0) {
+		if(insertWalletTransfer(vo) != 1) {
 			throw new BizException("BZT_TRANSFER_INSERT_501_FAILED", "501", null, 500);
 		}
 
