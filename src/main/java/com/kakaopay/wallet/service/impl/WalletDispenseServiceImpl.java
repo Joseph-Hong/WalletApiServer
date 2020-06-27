@@ -7,6 +7,8 @@ import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import javax.transaction.Transactional.TxType;
 
+import org.joda.time.LocalDateTime;
+import org.joda.time.Seconds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -59,7 +61,7 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 	@Override
 	public int dispense(WalletDispenseUTO vo) throws Exception {
 
-		//Select WalletTransfer data by transaction lock
+		//[Step-10] Select WalletTransfer data by transaction lock
 		WalletTransferRTO walletTransferRTO = new WalletTransferRTO();
 		walletTransferRTO.setRoomId(vo.getRoomId());
 		walletTransferRTO.setToken(vo.getToken());
@@ -68,21 +70,35 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 
 		List<Map<String, Object>> walletTransferList = walletTransferService.getWalletTransferList(walletTransferRTO);
 
-		//0) 뿌리기가 호출된 대화방과 동일한 대화방에 속한 사용자만이 받을 수 있습니다
+		//[Step-20] Validate the input parameter
+
+		//210) 뿌리기가 호출된 대화방과 동일한 대화방에 속한 사용자만이 받을 수 있습니다
 		if(CommonUtil.isEmpty(walletTransferList)) {
 			throw new BizException("BZT_DISPENSE_NOT_FOUND_501_FAILED", "501", null, 500);
 		}
 
 		Map<String, Object> walletTransfer = walletTransferList.get(0);
 
-		// Validate the input parameter
+		//211) 뿌린 건은 10분간만 유효합니다. 뿌린지 10분이 지난 요청에 대해서는 받기 실패 응답이 내려가야 합니다.
+		LocalDateTime nowDT = LocalDateTime.now();
+		String now = nowDT.toString("yyyy-MM-dd HH:mm:ss");
 
-		//1) 자신이 뿌리기한 건은 자신이 받을 수 없습니다
+		String then = CommonUtil.nvl(walletTransfer.get("regDate")).replaceAll(" ", "T");
+		LocalDateTime thenDT = new LocalDateTime();
+		thenDT = thenDT.parse(then);
+
+		int diffSeconds = Seconds.secondsBetween(thenDT, nowDT).getSeconds();
+
+		if(diffSeconds > (60 * 10)) {
+			throw new BizException("BZT_DISPENSE_TIME_OVER_506_FAILED", "506", null, 500);
+		}
+
+		//212) 자신이 뿌리기한 건은 자신이 받을 수 없습니다
 		if(vo.getRecipientUserId().equals(walletTransfer.get("senderUserId"))) {
 			throw new BizException("BZT_DISPENSE_ACCESS_VIOLATION_502_FAILED", "502", null, 500);
 		}
 
-		//2) 뿌리기 당 한 사용자는 한번만 받을 수 있습니다.
+		//213) 뿌리기 당 한 사용자는 한번만 받을 수 있습니다.
 		WalletDispenseRTO walletDispenseVO = new WalletDispenseRTO();
 		walletDispenseVO.setTransferNo(CommonUtil.nvl(walletTransfer.get("transferNo"), 0));
 		walletDispenseVO.setRecipientUserId(vo.getRecipientUserId());
@@ -93,7 +109,7 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 			throw new BizException("BZT_DISPENSE_DUPLICATED_RECIPIENT_503_FAILED", "503", null, 500);
 		}
 
-		// Update WalletDispense data - API를 호출한 사용자에게 할당하고
+		//[Step-30] Update WalletDispense data - API를 호출한 사용자에게 할당하고
 		WalletDispenseUTO walletDispenseUTO = new WalletDispenseUTO();
 		walletDispenseUTO.setRecipientUserId(vo.getRecipientUserId());
 		walletDispenseUTO.setSearchCondition("DISTRIBUTION_CONDITION");
@@ -103,7 +119,7 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 			throw new BizException("BZT_DISPENSE_UPDATE_504_FAILED", "504", null, 500);
 		}
 
-		// Retrieve the result - 그 금액을 응답값으로 내려줍니다.
+		//[Step-40] Retrieve the result - 그 금액을 응답값으로 내려줍니다.
 		walletDispenseVO = new WalletDispenseRTO();
 		walletDispenseVO.setTransferNo(CommonUtil.nvl(walletTransfer.get("transferNo"), 0));
 		walletDispenseVO.setRecipientUserId(vo.getRecipientUserId());
@@ -114,7 +130,7 @@ public class WalletDispenseServiceImpl extends EgovAbstractServiceImpl implement
 			throw new BizException("BZT_DISPENSE_NOT_FOUND_505_FAILED", "505", null, 500);
 		}
 
-		// Return the amount
+		//[Step-90] Return the amount
 		Map<String, Object> walletDispense =  walletDispenseList.get(0);
 		vo.setAmount(CommonUtil.nvl(walletDispense.get("amount"), 0.0));
 

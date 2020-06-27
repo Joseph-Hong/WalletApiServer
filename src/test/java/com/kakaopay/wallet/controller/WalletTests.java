@@ -38,7 +38,7 @@ public class WalletTests {
 	protected MockMvc mockMvc;
 
 	static AtomicInteger c;
-	static Blitzer blitzer = new Blitzer(99, 10);
+	static Blitzer blitzer = new Blitzer(1, 10);
 
 	@BeforeAll
 	static void setup() {
@@ -50,7 +50,7 @@ public class WalletTests {
 		blitzer.shutdown();
 	}
 
-
+	@Disabled("Pending")
 	@Test
 	void transfer() throws Exception {
 
@@ -95,7 +95,6 @@ public class WalletTests {
 		logger.debug("End of transfer : {} --------------------------------------", sw.getTotalTimeSeconds());
 	}
 
-	@Disabled("Pending")
 	@Test
 	void concurrencyDistributeForBlockingDupUserId() throws Exception {
 
